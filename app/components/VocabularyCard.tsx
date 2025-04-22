@@ -1,28 +1,57 @@
 import React from 'react';
-import { FaMicrophone, FaStop, FaSpinner } from 'react-icons/fa';
+import { FaMicrophone, FaStop, FaSpinner, FaExchangeAlt } from 'react-icons/fa';
 
 interface VocabularyCardProps {
   word: string;
   translation: string;
+  sentence?: string;
+  sentenceTranslation?: string;
   onRecordStart: () => void;
   onRecordStop: () => void;
   isRecording: boolean;
   isProcessing: boolean;
+  isSentenceMode: boolean;
+  onToggleMode: () => void;
 }
 
 const VocabularyCard: React.FC<VocabularyCardProps> = ({
   word,
   translation,
+  sentence,
+  sentenceTranslation,
   onRecordStart,
   onRecordStop,
   isRecording,
-  isProcessing
+  isProcessing,
+  isSentenceMode,
+  onToggleMode
 }) => {
+  const displayText = isSentenceMode ? sentence || word : word;
+  const displayTranslation = isSentenceMode ? sentenceTranslation || translation : translation;
+  
+  const hasSentence = !!sentence;
+
   return (
     <div className="bg-slate-800 rounded-lg shadow-md shadow-black/20 p-6 max-w-lg mx-auto border border-slate-700">
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-sm text-slate-400">
+          {isSentenceMode ? 'Sentence Mode' : 'Word Mode'}
+        </span>
+        
+        {hasSentence && (
+          <button 
+            onClick={onToggleMode}
+            className="flex items-center px-3 py-1 text-sm rounded bg-slate-700 text-blue-300 hover:bg-slate-600 transition-colors"
+          >
+            <FaExchangeAlt className="mr-1" />
+            Switch to {isSentenceMode ? 'Word' : 'Sentence'}
+          </button>
+        )}
+      </div>
+      
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-white mb-2">{word}</h2>
-        <p className="text-lg text-blue-300">{translation}</p>
+        <h2 className="text-3xl font-bold text-white mb-2">{displayText}</h2>
+        <p className="text-lg text-blue-300">{displayTranslation}</p>
       </div>
       
       <div className="flex flex-col items-center">
@@ -50,7 +79,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
               ? 'Processing... Please wait.' 
               : isRecording 
                 ? 'Listening... Click to stop' 
-                : 'Click the microphone to practice pronunciation'}
+                : `Click the microphone to practice ${isSentenceMode ? 'sentence' : 'word'} pronunciation`}
           </p>
         </div>
       </div>

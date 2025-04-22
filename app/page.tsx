@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FaArrowRight, FaInfoCircle } from 'react-icons/fa';
 import VocabularyCard from './components/VocabularyCard';
 import PronunciationMeter from './components/PronunciationMeter';
+import CircularProgressMeter from './components/CircularProgressMeter';
 import useSimplePronunciation from './hooks/useSimplePronunciation';
 import { getRandomWord, VocabularyItem } from './data/vocabulary';
 
@@ -12,6 +13,7 @@ export default function Home() {
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [level, setLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>('A1');
   const [showResults, setShowResults] = useState<boolean>(false);
+  const [isSentenceMode, setIsSentenceMode] = useState<boolean>(false);
 
   // Load a random word when the component mounts or level changes
   useEffect(() => {
@@ -19,7 +21,7 @@ export default function Home() {
     setShowResults(false);
   }, [level]);
 
-  // Initialize pronunciation hook with the current word
+  // Initialize pronunciation hook with the current word or sentence
   const { 
     isRecording, 
     isProcessing,
@@ -28,7 +30,9 @@ export default function Home() {
     startListening, 
     stopListening, 
     error: pronunciationError
-  } = useSimplePronunciation(currentWord?.word || '');
+  } = useSimplePronunciation(isSentenceMode && currentWord?.sentence 
+      ? currentWord.sentence 
+      : currentWord?.word || '');
 
   // Handle recording start
   const handleRecordStart = useCallback(async () => {
@@ -52,6 +56,12 @@ export default function Home() {
   const handleLevelChange = (newLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1') => {
     setLevel(newLevel);
   };
+
+  // Handle toggle between word and sentence mode
+  const handleToggleMode = useCallback(() => {
+    setIsSentenceMode((prev) => !prev);
+    setShowResults(false);
+  }, []);
 
   if (!currentWord) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -84,10 +94,14 @@ export default function Home() {
       <VocabularyCard
         word={currentWord.word}
         translation={currentWord.translation}
+        sentence={currentWord.sentence}
+        sentenceTranslation={currentWord.sentenceTranslation}
         onRecordStart={handleRecordStart}
         onRecordStop={handleRecordStop}
         isRecording={isRecording}
         isProcessing={isProcessing}
+        isSentenceMode={isSentenceMode}
+        onToggleMode={handleToggleMode}
       />
 
       {/* Instructions */}
@@ -95,7 +109,7 @@ export default function Home() {
         <h3 className="font-medium text-blue-400 mb-2">Speech Recognition</h3>
         <ol className="text-sm text-slate-300 text-left list-decimal list-inside">
           <li>Click the blue microphone button and allow microphone access</li>
-          <li>Pronounce the German word shown above</li>
+          <li>Pronounce the German {isSentenceMode ? 'sentence' : 'word'} shown above</li>
           <li>Click the red stop button when finished</li>
           <li>View your pronunciation score</li>
         </ol>
@@ -116,7 +130,7 @@ export default function Home() {
             <h3 className="text-lg font-medium text-white mb-2">Your pronunciation:</h3>
             <p className="text-slate-300 italic">&quot;{transcribedText}&quot;</p>
             <div className="mt-2 pt-2 border-t border-slate-700">
-              <p className="text-sm text-slate-400">Expected: <span className="font-medium text-blue-300">&quot;{currentWord.word}&quot;</span></p>
+              <p className="text-sm text-slate-400">Expected: <span className="font-medium text-blue-300">&quot;{isSentenceMode && currentWord.sentence ? currentWord.sentence : currentWord.word}&quot;</span></p>
             </div>
           </div>
           
@@ -130,12 +144,37 @@ export default function Home() {
             />
           </div>
           
+          {/* New Circular Progress Meter */}
+          <div className="mb-6">
+            <CircularProgressMeter 
+              items={[
+                { 
+                  value: analysisResult.details.phoneticAccuracy, 
+                  label: 'Fonetik', 
+                  color: 'dynamic'
+                },
+                { 
+                  value: analysisResult.details.stressAccuracy, 
+                  label: 'Vurgu', 
+                  color: 'dynamic'
+                },
+                { 
+                  value: analysisResult.details.rhythmAccuracy, 
+                  label: 'Ritim', 
+                  color: 'dynamic'
+                }
+              ]}
+              title="Telaffuz Değerlendirme"
+              subtitle="Almanca"
+            />
+          </div>
+          
           <div className="flex justify-center">
             <button
               onClick={handleNextWord}
               className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-lg"
             >
-              <span>Next Word</span>
+              <span>Next {isSentenceMode ? 'Sentence' : 'Word'}</span>
               <FaArrowRight />
             </button>
           </div>

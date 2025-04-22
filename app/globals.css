@@ -89,3 +89,39 @@ body {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
+
+/* Circular Progress Meter styles */
+.circular-progress-item {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.circular-progress-item svg circle {
+  transition: stroke-dashoffset 1.5s ease-in-out;
+}
+
+/* Different color styles for the progress meters */
+.circular-progress-item svg circle[stroke="green"] {
+  stroke: rgb(0, 255, 0);
+}
+
+.circular-progress-item svg circle[stroke="red"] {
+  stroke: rgb(255, 0, 0);
+}
+
+.circular-progress-item svg circle[stroke="blue"] {
+  stroke: rgb(0, 149, 255);
+}
+
+.circular-progress-item svg circle[stroke="pink"] {
+  stroke: rgb(255, 0, 149);
+}
+
+/* Dark background for the circular progress meter */
+.circular-progress-meter-container {
+  background-color: #202020;
+  border-radius: 1rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
