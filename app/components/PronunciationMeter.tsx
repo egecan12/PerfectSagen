@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface PronunciationMeterProps {
   accuracy: number;
@@ -7,6 +7,55 @@ interface PronunciationMeterProps {
   stressAccuracy?: number;
   feedback?: string;
 }
+
+// Odometer component to display score in a mechanical style
+const OdometerDisplay: React.FC<{ value: number }> = ({ value }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+  
+  // Animate the odometer value
+  useEffect(() => {
+    const duration = 2000; // 2 seconds animation
+    const start = displayValue;
+    const end = value;
+    const range = end - start;
+    const startTime = Date.now();
+    
+    const animateValue = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for a more mechanical feel
+      const easedProgress = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      
+      setDisplayValue(Math.round(start + range * easedProgress));
+      
+      if (progress < 1) {
+        requestAnimationFrame(animateValue);
+      }
+    };
+    
+    requestAnimationFrame(animateValue);
+  }, [value]);
+  
+  // Convert number to array of digits
+  const digits = displayValue.toString().padStart(3, '0').split('');
+  
+  return (
+    <div className="flex flex-col items-center">
+      <div className="odometer mb-2">
+        {digits.map((digit, index) => (
+          <div key={index} className="odometer-digit">
+            {digit}
+          </div>
+        ))}
+      </div>
+      <div className="text-lg font-medium text-blue-400">points</div>
+    </div>
+  );
+};
 
 const PronunciationMeter: React.FC<PronunciationMeterProps> = ({ 
   accuracy,
@@ -28,37 +77,28 @@ const PronunciationMeter: React.FC<PronunciationMeterProps> = ({
     return 'bg-red-500';
   };
 
-  const getTextColor = (value: number) => {
-    if (value >= 80) return 'text-green-500';
-    if (value >= 60) return 'text-yellow-500';
-    return 'text-red-500';
-  };
-
   return (
     <div className="w-full">
-      {/* Large centered score display */}
+      {/* Odometer score display */}
       <div className="flex justify-center mb-6">
-        <div className={`text-6xl font-bold ${getTextColor(safeAccuracy)}`}>
-          {safeAccuracy}
-          <span className="text-3xl">/100</span>
-        </div>
+        <OdometerDisplay value={safeAccuracy} />
       </div>
 
       {/* Feedback */}
       {feedback && (
         <div className="mb-6 text-center">
-          <p className="text-xl font-medium text-gray-800">{feedback}</p>
+          <p className="text-lg font-medium text-blue-300">{feedback}</p>
         </div>
       )}
       
       <div className="mb-8">
         <div className="mb-2 flex justify-between">
-          <span className="text-sm font-medium text-gray-700">Overall Accuracy</span>
-          <span className="text-sm font-medium text-gray-700">{safeAccuracy}%</span>
+          <span className="text-sm font-medium text-blue-300">Overall Accuracy</span>
+          <span className="text-sm font-medium text-blue-300">{safeAccuracy}%</span>
         </div>
-        <div className="h-4 w-full bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-4 w-full bg-slate-700 rounded-full overflow-hidden">
           <div 
-            className={`h-full ${getColor(safeAccuracy)} transition-all duration-500 ease-out`} 
+            className={`h-full ${getColor(safeAccuracy)} transition-all duration-1000 ease-out`} 
             style={{ width: `${safeAccuracy}%` }}
           ></div>
         </div>
@@ -68,12 +108,12 @@ const PronunciationMeter: React.FC<PronunciationMeterProps> = ({
       <div className="space-y-4">
         <div>
           <div className="mb-1 flex justify-between">
-            <span className="text-sm font-medium text-gray-700">Phonetic Accuracy</span>
-            <span className="text-sm font-medium text-gray-700">{safePhoneticAccuracy}%</span>
+            <span className="text-sm font-medium text-blue-300">Phonetic Accuracy</span>
+            <span className="text-sm font-medium text-blue-300">{safePhoneticAccuracy}%</span>
           </div>
-          <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-3 w-full bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className={`h-full ${getColor(safePhoneticAccuracy)} transition-all duration-500 ease-out`} 
+              className={`h-full ${getColor(safePhoneticAccuracy)} transition-all duration-700 ease-out`} 
               style={{ width: `${safePhoneticAccuracy}%` }}
             ></div>
           </div>
@@ -81,12 +121,12 @@ const PronunciationMeter: React.FC<PronunciationMeterProps> = ({
 
         <div>
           <div className="mb-1 flex justify-between">
-            <span className="text-sm font-medium text-gray-700">Rhythm Accuracy</span>
-            <span className="text-sm font-medium text-gray-700">{safeRhythmAccuracy}%</span>
+            <span className="text-sm font-medium text-blue-300">Rhythm Accuracy</span>
+            <span className="text-sm font-medium text-blue-300">{safeRhythmAccuracy}%</span>
           </div>
-          <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-3 w-full bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className={`h-full ${getColor(safeRhythmAccuracy)} transition-all duration-500 ease-out`} 
+              className={`h-full ${getColor(safeRhythmAccuracy)} transition-all duration-700 ease-out`} 
               style={{ width: `${safeRhythmAccuracy}%` }}
             ></div>
           </div>
@@ -94,12 +134,12 @@ const PronunciationMeter: React.FC<PronunciationMeterProps> = ({
 
         <div>
           <div className="mb-1 flex justify-between">
-            <span className="text-sm font-medium text-gray-700">Stress Accuracy</span>
-            <span className="text-sm font-medium text-gray-700">{safeStressAccuracy}%</span>
+            <span className="text-sm font-medium text-blue-300">Stress Accuracy</span>
+            <span className="text-sm font-medium text-blue-300">{safeStressAccuracy}%</span>
           </div>
-          <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-3 w-full bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className={`h-full ${getColor(safeStressAccuracy)} transition-all duration-500 ease-out`} 
+              className={`h-full ${getColor(safeStressAccuracy)} transition-all duration-700 ease-out`} 
               style={{ width: `${safeStressAccuracy}%` }}
             ></div>
           </div>
