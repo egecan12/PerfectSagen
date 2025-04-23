@@ -1,0 +1,6 @@
+montreal-forced-aligner==3.2.2
+flask==2.3.3
+flask-cors==4.0.0
+pydantic==2.6.1
+python-dotenv==1.0.1
+pytest==7.4.4 

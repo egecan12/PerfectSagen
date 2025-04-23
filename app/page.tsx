@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { FaArrowRight, FaInfoCircle } from 'react-icons/fa';
+import { FaArrowRight, FaInfoCircle, FaCogs } from 'react-icons/fa';
 import VocabularyCard from './components/VocabularyCard';
 import PronunciationMeter from './components/PronunciationMeter';
 import CircularProgressMeter from './components/CircularProgressMeter';
 import useSimplePronunciation from './hooks/useSimplePronunciation';
+import useMfaPronunciation, { MfaPronunciationHook } from './hooks/useMfaPronunciation';
 import { getRandomWord, VocabularyItem } from './data/vocabulary';
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
   const [level, setLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>('A1');
   const [showResults, setShowResults] = useState<boolean>(false);
   const [isSentenceMode, setIsSentenceMode] = useState<boolean>(false);
+  const [useMfa, setUseMfa] = useState<boolean>(false);
 
   // Load a random word when the component mounts or level changes
   useEffect(() => {
@@ -21,30 +23,34 @@ export default function Home() {
     setShowResults(false);
   }, [level]);
 
-  // Initialize pronunciation hook with the current word or sentence
-  const { 
-    isRecording, 
-    isProcessing,
-    transcribedText, 
-    analysisResult,
-    startListening, 
-    stopListening, 
-    error: pronunciationError
-  } = useSimplePronunciation(isSentenceMode && currentWord?.sentence 
+  // Expected text to analyze
+  const expectedText = isSentenceMode && currentWord?.sentence 
       ? currentWord.sentence 
-      : currentWord?.word || '');
+      : currentWord?.word || '';
 
+  // Initialize pronunciation hooks
+  const simplePronunciation = useSimplePronunciation(expectedText);
+  const mfaPronunciation = useMfaPronunciation(expectedText);
+  
   // Handle recording start
   const handleRecordStart = useCallback(async () => {
     setShowResults(false);
-    await startListening();
-  }, [startListening]);
+    if (useMfa) {
+      await mfaPronunciation.startRecording();
+    } else {
+      await simplePronunciation.startListening();
+    }
+  }, [useMfa, mfaPronunciation, simplePronunciation]);
 
   // Handle recording stop and evaluate pronunciation
   const handleRecordStop = useCallback(async () => {
-    await stopListening();
+    if (useMfa) {
+      await mfaPronunciation.stopRecording();
+    } else {
+      await simplePronunciation.stopListening();
+    }
     setShowResults(true);
-  }, [stopListening]);
+  }, [useMfa, mfaPronunciation, simplePronunciation]);
 
   // Handle next word
   const handleNextWord = useCallback(() => {
@@ -63,9 +69,24 @@ export default function Home() {
     setShowResults(false);
   }, []);
 
+  // Handle toggle between Simple and MFA mode
+  const handleToggleMfa = useCallback(() => {
+    setUseMfa((prev) => !prev);
+    setShowResults(false);
+  }, []);
+
   if (!currentWord) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
+
+  // Get the relevant state from the active hook
+  const { 
+    isRecording, 
+    isProcessing,
+    transcribedText, 
+    analysisResult,
+    error: pronunciationError
+  } = useMfa ? mfaPronunciation : simplePronunciation;
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-16 lg:p-24 bg-slate-900">
@@ -88,6 +109,29 @@ export default function Home() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* MFA Toggle */}
+      <div className="mb-6 flex items-center space-x-4">
+        <button
+          onClick={handleToggleMfa}
+          className={`px-4 py-2 rounded-md flex items-center space-x-2 ${
+            useMfa
+              ? 'bg-green-600 text-white shadow-lg'
+              : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
+          } transition-all duration-200`}
+          disabled={useMfa && !mfaPronunciation.isBackendAvailable}
+        >
+          <FaCogs />
+          <span>{useMfa ? 'Using MFA' : 'Using Simple Analysis'}</span>
+        </button>
+        
+        {useMfa && !mfaPronunciation.isBackendAvailable && (
+          <div className="text-sm text-amber-400">
+            <FaInfoCircle className="inline mr-1" />
+            MFA backend not available
+          </div>
+        )}
       </div>
 
       {/* Vocabulary card */}
@@ -185,7 +229,7 @@ export default function Home() {
       <div className="mt-8 text-sm text-slate-500 text-center">
         <p>Pronunciation analysis requires a modern browser with microphone access</p>
         <p className="mt-1">
-          Powered by Web Speech API and pronunciation analysis
+          Powered by {useMfa ? 'Montreal Forced Aligner' : 'Web Speech API'} and pronunciation analysis
         </p>
       </div>
     </main>

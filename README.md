@@ -1,69 +1,134 @@
-# Learn German Pronunciation
+# Learn German
 
-A web application to help users practice and improve their German pronunciation with real-time feedback.
+A Next.js application for learning German pronunciation with pronunciation evaluation.
 
 ## Features
 
-- Practice pronunciation of German vocabulary words
-- Real-time speech recognition using the Web Speech API
-- Pronunciation accuracy assessment with visual feedback
-- Word selection by language proficiency level (A1, A2)
-- Instant feedback on pronunciation quality
-
-## Prerequisites
-
-- Node.js 18.x or higher
-- NPM or Yarn
-- A modern web browser with microphone access (Chrome, Firefox, Edge, etc.)
+- Learn German vocabulary with correct pronunciation
+- Record your voice and get feedback on your pronunciation
+- Two modes of pronunciation analysis:
+  - Simple analysis using local string comparison algorithms
+  - Advanced analysis using Montreal Forced Aligner (MFA)
+- View detailed metrics on phonetic accuracy, rhythm, and stress
 
 ## Getting Started
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd learn-german
-```
+### Prerequisites
 
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
+- Node.js 18+ and npm
+- For MFA backend:
+  - Conda (Miniconda or Anaconda)
+  - Python 3.9+
+
+### Frontend Setup
+
+1. Install dependencies:
+   ```
+   npm install
+   ```
+
+2. Create a `.env.local` file with the following environment variables:
+   ```
+   NEXT_PUBLIC_OPENAI_API_KEY=your_openai_key_here
+   NEXT_PUBLIC_MFA_BACKEND_URL=http://localhost:5000
+   ```
 
 3. Run the development server:
-```bash
-npm run dev
-# or
-yarn dev
-```
+   ```
+   npm run dev
+   ```
 
-4. Open your browser and navigate to [http://localhost:3000](http://localhost:3000)
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## How to Use
+### Montreal Forced Aligner Backend Setup
 
-1. Select a language level (A1 or A2)
-2. Click the microphone button and pronounce the displayed German word
-3. Click the stop button when you're done speaking
-4. View your pronunciation accuracy score and feedback
-5. Click "Next Word" to continue practicing with a new word
+The application can use Montreal Forced Aligner for more accurate pronunciation analysis. To set up the MFA backend:
 
-## Tech Stack
+#### Option 1: Using the install script (Recommended)
 
-- [Next.js](https://nextjs.org/) - React framework
-- [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API) - Speech recognition
-- [Tailwind CSS](https://tailwindcss.com/) - Styling
-- [React Icons](https://react-icons.github.io/react-icons/) - UI icons
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
 
-## Browser Compatibility
+2. Run the installation and start script:
+   ```
+   ./install_and_run.sh
+   ```
 
-The application uses the Web Speech API which is supported in:
-- Chrome (desktop and Android)
-- Edge
-- Safari (desktop and iOS, limited support)
-- Firefox (limited support)
+This script will:
+- Create a conda environment
+- Install MFA and dependencies
+- Download necessary models
+- Start the Flask server
+
+#### Option 2: Manual Setup
+
+1. Create a conda environment:
+   ```
+   conda create -n mfa-env python=3.9
+   conda activate mfa-env
+   ```
+
+2. Install MFA:
+   ```
+   conda install -c conda-forge montreal-forced-aligner
+   ```
+
+3. Install backend dependencies:
+   ```
+   cd backend
+   pip install -r requirements.txt
+   ```
+
+4. Start the Flask server:
+   ```
+   python app.py
+   ```
+
+#### Option 3: Using Docker (for advanced users)
+
+1. Build and start the Docker container:
+   ```
+   cd backend
+   docker-compose up -d
+   ```
+
+### Usage
+
+1. Click on "Using Simple Analysis" to toggle between simple analysis and MFA.
+2. Select a vocabulary level (A1, A2).
+3. Click the microphone button to start recording.
+4. Pronounce the German word or sentence.
+5. Click the stop button when finished.
+6. View your pronunciation analysis results.
+
+## Project Structure
+
+- `app/` - Next.js application files
+  - `components/` - React components
+  - `hooks/` - Custom React hooks for pronunciation
+  - `services/` - Services for transcription and analysis
+  - `utils/` - Utility functions
+  - `data/` - Vocabulary data
+- `backend/` - MFA backend
+  - `app.py` - Flask application
+  - `mfa_service.py` - MFA integration service
+
+## Technologies Used
+
+- **Frontend**:
+  - Next.js 15
+  - React 19
+  - TailwindCSS 4
+  - Xenova Transformers.js for local speech recognition
+  - OpenAI Whisper API for transcription
+  
+- **Backend**:
+  - Flask
+  - Montreal Forced Aligner (MFA)
+  - Kaldi (included with MFA)
 
 ## License
 
-MIT
+This project is licensed under the MIT License.
